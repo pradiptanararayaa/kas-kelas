@@ -1,4 +1,4 @@
-# Kas Kelas XII SMA
+# Pencatat Kas Kelas SMA
 
 Aplikasi web untuk mengelola kas kelas: data siswa, pembayaran kas Rp1.000 per hari sekolah (Senin–Jumat),
 pembayaran di muka (saldo kredit), uang masuk lain, pengeluaran, dan laporan keuangan.
