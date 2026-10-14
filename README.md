@@ -3,7 +3,7 @@
 Aplikasi web untuk mengelola kas kelas: data siswa, pembayaran kas Rp1.000 per hari sekolah (Senin–Jumat),
 pembayaran di muka (saldo kredit), uang masuk lain, pengeluaran, dan laporan keuangan.
 
-**Teknologi:** Next.js (App Router), TypeScript, Tailwind CSS, Prisma, SQLite, Recharts, Motion.
+**Techstack:** Next.js (App Router), TypeScript, Tailwind CSS, Prisma, SQLite, Recharts, Motion.
 
 ## Fitur
 - Dashboard: saldo kas, pemasukan/pengeluaran minggu ini, siswa lunas, tunggakan, grafik 8 minggu
@@ -15,7 +15,7 @@ pembayaran di muka (saldo kredit), uang masuk lain, pengeluaran, dan laporan keu
 - Laporan mingguan/bulanan/tahunan + ekspor CSV
 - Peran: Bendahara (admin), Ketua kelas, Siswa; mode terang/gelap; responsif untuk HP
 
-## Aturan bisnis
+## Rules
 - Hari wajib Senin–Jumat, kecuali tanggal libur di tabel `Holiday`
 - Uang masuk dicatat **sekali** saat benar-benar diterima; pemakaian kredit tidak menambah pemasukan
 - Saldo kas = saldo awal + pemasukan sah − pengeluaran sah (transaksi batal tidak dihitung)
