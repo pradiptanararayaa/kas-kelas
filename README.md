@@ -61,8 +61,6 @@ Pada mode development, seed juga membuat siswa contoh (NIS `DEV...`) dan akun `k
   Untuk online, ganti `provider` Prisma ke PostgreSQL.
 - Produksi: `npm run build`, `NODE_ENV=production npx prisma migrate deploy && npx prisma db seed`,
   lalu `npm start`. Seed produksi hanya membuat pengaturan dan akun bendahara.
-- Belum ada pembatasan percobaan login (rate limit). Tambahkan sebelum dibuka ke internet.
-- Bukan untuk data pribadi nyata di repositori publik: jangan commit `.env` maupun `kas.db`.
 
 ## Struktur
 ```
