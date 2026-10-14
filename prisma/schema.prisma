@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  KETUA
+  SISWA
+}
+
+enum IncomeType {
+  STUDENT_PAYMENT
+  OTHER
+}
+
+model Setting {
+  id             Int      @id @default(1)
+  openingBalance Int      @default(0)
+  dailyFee       Int      @default(1000)
+  startDate      DateTime // awal kewajiban kas tahun ajaran
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  active       Boolean  @default(true)
+  studentId    String?  @unique // untuk role SISWA
+  student      Student? @relation(fields: [studentId], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model Student {
+  id            String       @id @default(cuid())
+  nis           String       @unique
+  name          String
+  active        Boolean      @default(true)
+  creditBalance Int          @default(0) // saldo kredit (uang di muka belum terpakai)
+  startDate     DateTime         // kewajiban dihitung mulai tanggal ini
+  endDate       DateTime?        // diisi saat dinonaktifkan: kewajiban berhenti
+  user          User?
+  allocations   Allocation[]
+  incomes       Income[]
+  createdAt     DateTime     @default(now())
+  @@index([name])
+}
+
+model Holiday {
+  date DateTime @id
+  name String
+}
+
+// Satu baris = satu hari wajib yang sudah lunas untuk satu siswa.
+// activeKey unik hanya selama aktif (NULL saat dibatalkan) => DB menolak pembayaran ganda.
+model Allocation {
+  id        String    @id @default(cuid())
+  studentId String
+  student   Student   @relation(fields: [studentId], references: [id])
+  dueDate   DateTime 
+  amount    Int
+  activeKey String?   @unique
+  paidAt    DateTime  @default(now())
+  voidedAt  DateTime?
+  @@index([studentId, dueDate])
+}
+
+// Hanya uang yang benar-benar diterima. Pemakaian kredit TIDAK membuat Income.
+model Income {
+  id          String     @id @default(cuid())
+  type        IncomeType
+  amount      Int
+  date        DateTime  
+  description String?
+  studentId   String?
+  student     Student?   @relation(fields: [studentId], references: [id])
+  createdById String
+  createdAt   DateTime   @default(now())
+  voidedAt    DateTime?
+  voidReason  String?
+  @@index([date])
+}
+
+model Expense {
+  id          String    @id @default(cuid())
+  amount      Int
+  date        DateTime 
+  category    String
+  description String
+  proofUrl    String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  voidedAt    DateTime?
+  voidReason  String?
+  @@index([date])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // CREATE | UPDATE | VOID | CREDIT_APPLIED ...
+  entity    String
+  entityId  String
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+  @@index([entity, entityId])
+}
