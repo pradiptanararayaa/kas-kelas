@@ -86,7 +86,7 @@ export async function recordStudentPayment(input: { studentId: string; amount: n
     });
     const days = await applyCredit(tx, st.id, todayWIB(), input.userId);
     return { incomeId: income.id, daysSettled: days };
-  });
+  }, { maxWait: 10000, timeout: 30000 });
 }
 
 /** Tunggakan seluruh siswa aktif: kewajiban jatuh tempo belum lunas dikurangi kredit. */
@@ -98,7 +98,7 @@ export async function getArrears(asOf = todayWIB()) {
       const unpaid = (await unpaidDays(tx, s.id, asOf)).length;
       const owed = Math.max(0, unpaid * dailyFee - s.creditBalance);
       return { studentId: s.id, name: s.name, unpaidDays: unpaid, credit: s.creditBalance, arrears: owed, lunas: owed === 0 };
-    })));
+    })), { maxWait: 10000, timeout: 30000 });
 }
 
 /** Saldo kas = saldo awal + pemasukan sah − pengeluaran sah. */
@@ -115,7 +115,7 @@ export async function getBalance() {
 export async function settleAllCredits(userId: string) {
   const { dailyFee } = await getSettingOutside();
   const list = await prisma.student.findMany({ where: { active: true, creditBalance: { gte: dailyFee } }, select: { id: true } });
-  for (const s of list) await prisma.$transaction((tx) => applyCredit(tx, s.id, todayWIB(), userId));
+  for (const s of list) await prisma.$transaction((tx) => applyCredit(tx, s.id, todayWIB(), userId), { maxWait: 10000, timeout: 30000 });
 }
 const getSettingOutside = () => prisma.setting.findUniqueOrThrow({ where: { id: 1 } });
 
