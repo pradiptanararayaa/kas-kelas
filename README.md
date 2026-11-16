@@ -56,6 +56,7 @@ npm run dev
    - `ADMIN_PASSWORD` — password bendahara awal (minimal 8 karakter)
    - `START_DATE` — tanggal mulai kas
 3. Build command default `npm run build` akan menjalankan Prisma generate, migrasi database, seed akun bendahara (seed aman diulang), lalu build Next.js.
+   - Database Supabase yang sudah berisi schema awal menggunakan baseline Prisma (`20261116131205_kas_kelas_postgresql_init`); migrasi lama SQLite dipertahankan sebagai no-op agar riwayat migrasi kompatibel.
 4. Setiap push ke `main` akan memicu deployment otomatis jika integrasi Git Vercel aktif.
 
 **Penting:** jangan pernah menaruh password database, `AUTH_SECRET`, atau Supabase service-role/secret key di kode atau variabel `NEXT_PUBLIC_*`. Aplikasi mengakses database dari server melalui Prisma; tidak memerlukan Supabase key di browser.
