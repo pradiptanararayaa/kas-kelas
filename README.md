@@ -1,9 +1,8 @@
 # Pencatat Kas Kelas SMA
 
-Aplikasi web untuk mengelola kas kelas: data siswa, pembayaran kas Rp1.000 per hari sekolah (Senin–Jumat),
-pembayaran di muka (saldo kredit), uang masuk lain, pengeluaran, dan laporan keuangan.
+Aplikasi web untuk mengelola kas kelas: data siswa, pembayaran kas Rp1.000 per hari sekolah (Senin–Jumat), pembayaran di muka (saldo kredit), uang masuk lain, pengeluaran, dan laporan keuangan.
 
-**Techstack:** Next.js (App Router), TypeScript, Tailwind CSS, Prisma, SQLite, Recharts, Motion.
+**Techstack:** Next.js (App Router), TypeScript, Tailwind CSS, Prisma 6, Supabase PostgreSQL, Recharts, Motion.
 
 ## Fitur
 - Dashboard: saldo kas, pemasukan/pengeluaran minggu ini, siswa lunas, tunggakan, grafik 8 minggu
@@ -15,56 +14,55 @@ pembayaran di muka (saldo kredit), uang masuk lain, pengeluaran, dan laporan keu
 - Laporan mingguan/bulanan/tahunan + ekspor CSV
 - Peran: Bendahara (admin), Ketua kelas, Siswa; mode terang/gelap; responsif untuk HP
 
-## Rules
+## Aturan keuangan
 - Hari wajib Senin–Jumat, kecuali tanggal libur di tabel `Holiday`
 - Uang masuk dicatat **sekali** saat benar-benar diterima; pemakaian kredit tidak menambah pemasukan
 - Saldo kas = saldo awal + pemasukan sah − pengeluaran sah (transaksi batal tidak dihitung)
 - Anti pembayaran ganda: transaksi database + kunci unik `siswa:tanggal`
 - Seed tidak pernah membuat transaksi uang
 
-## Instalasi
-Prasyarat: Node.js 20+ dan Git.
+## Setup lokal
+
+Prasyarat: Node.js 20+.
 
 ```bash
-git clone https://github.com/USERNAME/kas-kelas.git
+git clone https://github.com/pradiptanararayaa/kas-kelas.git
 cd kas-kelas
 npm install
 ```
 
-Salin file lingkungan, lalu isi nilainya:
+Salin `.env.example` menjadi `.env`, lalu isi:
+- `DATABASE_URL`: connection string Supabase **pooler** (port 6543, parameter `pgbouncer=true`)
+- `DIRECT_URL`: connection string Supabase **direct** (port 5432), untuk migrasi Prisma
+- `AUTH_SECRET`: string acak minimal 32 karakter
+- `ADMIN_USERNAME` dan `ADMIN_PASSWORD`: akun bendahara awal
+- `START_DATE`: tanggal mulai kas, format `YYYY-MM-DD`
+
+Jalankan:
 
 ```bash
-cp .env.example .env        # Windows CMD: copy .env.example .env
-```
-
-| Variabel | Keterangan |
-|---|---|
-| `DATABASE_URL` | `file:./kas.db` (SQLite, otomatis dibuat di `prisma/`) |
-| `AUTH_SECRET` | String acak min. 32 karakter: `node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"` |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Akun bendahara pertama (password min. 8 karakter) |
-| `START_DATE` | Tanggal mulai kewajiban kas, format `YYYY-MM-DD` |
-
-```bash
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 npx prisma db seed
 npm run dev
 ```
 
-Buka http://localhost:3000 lalu login sebagai bendahara.
+## Deploy ke Vercel
+1. Import repository ini ke Vercel dengan branch `main`.
+2. Tambahkan Environment Variables untuk Production (dan Preview bila diperlukan):
+   - `DATABASE_URL` — Supabase pooler connection string
+   - `DIRECT_URL` — Supabase direct connection string
+   - `AUTH_SECRET` — random secret minimal 32 karakter
+   - `ADMIN_USERNAME` — username bendahara awal
+   - `ADMIN_PASSWORD` — password bendahara awal (minimal 8 karakter)
+   - `START_DATE` — tanggal mulai kas
+3. Build command default `npm run build` akan menjalankan Prisma generate, migrasi database, seed akun bendahara (seed aman diulang), lalu build Next.js.
+4. Setiap push ke `main` akan memicu deployment otomatis jika integrasi Git Vercel aktif.
 
-Pada mode development, seed juga membuat siswa contoh (NIS `DEV...`) dan akun `ketua` / `siswa`.
-**Akun contoh ini hanya untuk development; jangan dipakai di server sungguhan.**
-
-## Produksi / berbagi
-- SQLite menyimpan semua data di satu file `prisma/kas.db`. **Backup rutin** dengan menyalin file itu.
-- Jalankan di laptop/PC/VPS sendiri. Hosting serverless (mis. Vercel) tidak cocok untuk SQLite.
-  Untuk online, ganti `provider` Prisma ke PostgreSQL.
-- Produksi: `npm run build`, `NODE_ENV=production npx prisma migrate deploy && npx prisma db seed`,
-  lalu `npm start`. Seed produksi hanya membuat pengaturan dan akun bendahara.
+**Penting:** jangan pernah menaruh password database, `AUTH_SECRET`, atau Supabase service-role/secret key di kode atau variabel `NEXT_PUBLIC_*`. Aplikasi mengakses database dari server melalui Prisma; tidak memerlukan Supabase key di browser.
 
 ## Struktur
 ```
-prisma/            skema, migrasi, seed
+prisma/            skema, migrasi PostgreSQL, seed
 src/lib/           finance.ts (logika uang), actions.ts (server actions), auth.ts
 src/app/           halaman: dashboard, siswa, pembayaran, transaksi, laporan, login, api
 src/components/    navigasi, tab, chart, form

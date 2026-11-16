@@ -68,7 +68,7 @@ export async function applyCredit(tx: Tx, studentId: string, asOf: Date, userId:
  */
 export async function recordStudentPayment(input: { studentId: string; amount: number; date: Date; userId: string }) {
   return prisma.$transaction(async (tx) => {
-    // SQLite mengunci database saat menulis, jadi transaksi ini berjalan serial; activeKey unik jadi pengaman kedua.
+    // Transaksi PostgreSQL menjaga perubahan saldo, pemasukan, dan alokasi tetap atomik; activeKey unik menjadi pengaman pembayaran ganda.
     const { dailyFee } = await getSetting(tx);
     const st = await tx.student.findUnique({ where: { id: input.studentId } });
     if (!st) throw new BizError("Siswa tidak ditemukan");
